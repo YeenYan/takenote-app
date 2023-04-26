@@ -1,14 +1,45 @@
-import { createApp } from 'vue'
-import { createPinia } from 'pinia'
+import { createApp } from 'vue';
+import { createPinia } from 'pinia';
 
-import App from './App.vue'
-import router from './router'
+import App from './App.vue';
+import router from './router';
+import VeeValidatePlugin from './includes/validations';
 
-import './assets/main.css'
+import './assets/css/base.css';
 
-const app = createApp(App)
+/*================================================
+============== Generic Components ==============*/
+import BaseButton from './components/UI/BaseButton.vue';
+import BaseCard from './components/UI/BaseCard.vue';
 
-app.use(createPinia())
-app.use(router)
+/*=============================================*/
 
-app.mount('#app')
+const app = createApp(App);
+
+app.use(createPinia());
+app.use(router);
+app.use(VeeValidatePlugin);
+
+
+// Implementing the Tab Title on every page
+router.beforeEach((to, from, next) => {
+  document.title = `TakeNote | ${to.meta.title}`;
+
+  // if (to.path === '/login' && auth.currentUser) {
+  //   next('/');
+  //   return;
+  // }
+
+  // if (to.matched.some(record => record.meta.requiresAuth) && !auth.currentUser) {
+  //   next('/login');
+  //   return;
+  // }
+
+  next();
+});
+
+
+app.component('base-button', BaseButton);
+app.component('base-card', BaseCard);
+
+app.mount('#app');

@@ -1,23 +1,55 @@
-import { createRouter, createWebHistory } from 'vue-router'
-import HomeView from '../views/HomeView.vue'
+import { createRouter, createWebHistory } from "vue-router";
+import Home from '../views/Home.vue';
+import Login from '../views/Login.vue';
+import Register from '../views/Register.vue';
+import ForgotPassword from '../views/ForgotPassword.vue';
+// import MainApp from '../views/MainApp.vue';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
       path: '/',
-      name: 'home',
-      component: HomeView
+      name: 'Home',
+      component: Home,
+      meta: {
+        title: 'Home'
+      }
     },
     {
-      path: '/about',
-      name: 'about',
-      // route level code-splitting
-      // this generates a separate chunk (About.[hash].js) for this route
-      // which is lazy-loaded when the route is visited.
-      component: () => import('../views/AboutView.vue')
-    }
+      path: '/login',
+      name: 'Login',
+      component: Login,
+      meta: {
+        title: 'Login'
+      }
+    },
+    {
+      path: '/register',
+      name: 'Register',
+      component: Register,
+      meta: {
+        title: 'Create Account'
+      }
+    },
+    {
+      path: '/forgot-password',
+      name: 'ForgotPassword',
+      component: ForgotPassword,
+      meta: {
+        title: 'Reset Password'
+      }
+    },
+    // {
+    //   path: '/TakeNote',
+    //   name: 'mainApp',
+    //   component: MainApp,
+    //   meta: {
+    //     title: 'Main App',
+    //     requiresAuth: true
+    //   }
+    // },
   ]
-})
+});
 
-export default router
+export default router;
