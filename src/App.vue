@@ -13,6 +13,10 @@ body {
   @apply font-sans p-0 m-0 box-border;
 }
 
+.error-text {
+  @apply text-red-500 italic text-sm leading-none;
+}
+
 /* .guide {
   @apply outline-1 outline-red-500 outline;
 } */

@@ -4,6 +4,7 @@ import { createPinia } from 'pinia';
 import App from './App.vue';
 import router from './router';
 import VeeValidatePlugin from './includes/validations';
+import { auth } from './includes/firebase';
 
 import './assets/css/base.css';
 
@@ -14,11 +15,24 @@ import BaseCard from './components/UI/BaseCard.vue';
 
 /*=============================================*/
 
-const app = createApp(App);
+let app;
 
-app.use(createPinia());
-app.use(router);
-app.use(VeeValidatePlugin);
+auth.onAuthStateChanged(() => {
+  if (!app) {
+    app = createApp(App);
+
+    app.use(createPinia());
+    app.use(router);
+    app.use(VeeValidatePlugin);
+
+
+    app.component('base-button', BaseButton);
+    app.component('base-card', BaseCard);
+
+
+    app.mount('#app');
+  }
+});
 
 
 // Implementing the Tab Title on every page
@@ -37,9 +51,3 @@ router.beforeEach((to, from, next) => {
 
   next();
 });
-
-
-app.component('base-button', BaseButton);
-app.component('base-card', BaseCard);
-
-app.mount('#app');

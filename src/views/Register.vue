@@ -1,6 +1,7 @@
 <template>
   <div class="form-container">
-    <vee-form :validate-schema="schema" class="register-form" @submit="register">
+    <vee-form :validation-schema="schema" class="register-form" @submit="register">
+      <!--  -->
       <div class="logo-wrapper">
         <router-link :to="{ name: 'Home' }">
           <img src="../assets/logo.png" alt="Logo" class="logo-img" />
@@ -9,31 +10,40 @@
 
       <p class="login-register__text">Never forget the important things again.</p>
 
+      <!-- Message of the login Status: Failed, Loadings, Success -->
+      <p v-if="reg_show_alert" class="error-text reg-error-text">
+        {{ reg_alert_msg }}
+      </p>
+
       <div class="inputs">
         <!-- Username -->
         <div class="input">
           <vee-field name="username" type="text" placeholder="Username" />
-          <ErrorMessage class="text-error-500" name="username" />
         </div>
+        <ErrorMessage class="error-text" name="username" />
         <!-- Email -->
         <div class="input">
           <vee-field name="email" type="email" placeholder="Email" />
-          <ErrorMessage class="text-error-500" name="email" />
         </div>
+        <ErrorMessage class="error-text" name="email" />
         <!-- Password -->
         <div class="input">
           <vee-field name="password" :bails="false" v-slot="{ field, errors }">
             <input type="password" placeholder="Password" v-bind="field" />
-            <div class="text-red-600" v-for="error in errors" :key="error">
+            <div class="error-text" v-for="error in errors" :key="error">
               {{ error }}
             </div>
           </vee-field>
         </div>
         <!-- Confirm Password -->
         <div class="input">
-          <vee-field name="confirm_password" type="text" placeholder="Confirm Password" />
-          <ErrorMessage class="text-error-500" name="confirm_password" />
+          <vee-field
+            name="confirm_password"
+            type="password"
+            placeholder="Confirm Password"
+          />
         </div>
+        <ErrorMessage class="error-text" name="confirm_password" />
         <base-button color="purple" class="login-register-btn" type="submit"
           >Sign up</base-button
         >
@@ -49,7 +59,8 @@
 
 <script>
 import { mapActions } from "pinia";
-// import useUserStore from "../stores/user";
+import useUserStore from "../stores/user";
+import router from "../router/index";
 
 export default {
   name: "Register",
@@ -58,27 +69,60 @@ export default {
       schema: {
         username: "required|min:3|max:100|alpha_spaces",
         email: "required|min:3|max:100|email",
-        password: "required|min:9|max:100|excluded:password",
+        password: "required|min:9|max:100",
         confirm_password: "password_mismatch:@password",
       },
+      reg_in_submission: false,
+      reg_show_alert: false,
+      reg_alert_msg: "Please wait! Your account is being created.",
     };
   },
   methods: {
-    // // to use the actions from '../stores/user.js'
-    // // using an alias for this "createUser" is the alias for register
-    // ...mapActions(useUserStore, {
-    //   createUser: "register",
-    // }),
-    // async register(values) {
-    //   // all the data from the inputs will be in the 'values' parameter
-    //   try {
-    //     // actions used from "../stores/user"
-    //     await this.createUser(values);
-    //   } catch (error) {
-    //     return;
-    //   }
-    //   window.location.reload();
-    // },
+    // to use the actions from '../stores/user.js'
+    // using an alias for this "createUser" is the alias for register
+    ...mapActions(useUserStore, {
+      createUser: "register",
+    }),
+    async register(values) {
+      this.reg_show_alert = true;
+      this.reg_in_submission = true;
+      this.reg_alert_msg = "Please wait! Your account is being created.";
+
+      // all the data from the inputs will be in the 'values' parameter
+      try {
+        // actions used from "../stores/user"
+        await this.createUser(values);
+        router.push("/login");
+      } catch (error) {
+        console.log(error.code);
+        switch (error.code) {
+          case "auth/email-already-in-use":
+            this.reg_alert_msg = "Email already in use";
+            break;
+          case "auth/invalid-email":
+            this.reg_alert_msg = "Invalid email";
+            break;
+          case "auth/operation-not-allowed":
+            this.reg_alert_msg = "Operation not allowed";
+            break;
+          case "auth/weak-password":
+            this.reg_alert_msg = "Weak password";
+            break;
+          case "auth/missing-email":
+            this.reg_alert_msg = "Please input an email address";
+            break;
+          case "auth/missing-password":
+            this.reg_alert_msg = "Please input a password";
+            break;
+          case "auth/admin-restricted-operation":
+            this.reg_alert_msg = "Please input necessary details";
+            break;
+          default:
+            this.reg_alert_msg = "Something went wrong";
+        }
+        return;
+      }
+    },
   },
 };
 </script>
@@ -90,5 +134,9 @@ export default {
 
 .signin-signup__wrapper a {
   @apply text-sm text-purple-500 font-medium md:text-base;
+}
+
+.reg-error-text {
+  @apply text-base mb-3;
 }
 </style>

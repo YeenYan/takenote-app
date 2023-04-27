@@ -3,7 +3,8 @@ import Home from '../views/Home.vue';
 import Login from '../views/Login.vue';
 import Register from '../views/Register.vue';
 import ForgotPassword from '../views/ForgotPassword.vue';
-// import MainApp from '../views/MainApp.vue';
+
+import MainApp from '../views/MainApp.vue';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -40,15 +41,15 @@ const router = createRouter({
         title: 'Reset Password'
       }
     },
-    // {
-    //   path: '/TakeNote',
-    //   name: 'mainApp',
-    //   component: MainApp,
-    //   meta: {
-    //     title: 'Main App',
-    //     requiresAuth: true
-    //   }
-    // },
+    {
+      path: '/TakeNote',
+      name: 'mainApp',
+      component: MainApp,
+      meta: {
+        title: 'Main App',
+        requiresAuth: true
+      }
+    },
   ]
 });
 
