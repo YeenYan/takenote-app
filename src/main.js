@@ -29,7 +29,6 @@ auth.onAuthStateChanged(() => {
     app.component('base-button', BaseButton);
     app.component('base-card', BaseCard);
 
-
     app.mount('#app');
   }
 });

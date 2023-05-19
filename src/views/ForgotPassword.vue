@@ -8,7 +8,7 @@
         <div class="input">
           <input type="email" placeholder="Email" v-model="email" />
         </div>
-        <base-button color="gray" class="login-register-btn">Reset</base-button>
+        <base-button class="login-register-btn gray">Reset</base-button>
       </div>
     </form>
   </div>

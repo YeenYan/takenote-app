@@ -1,6 +1,5 @@
 <template>
-  <button :class="[color, 'btn']">
-    <!-- <slot name="icon" v-if="!show"></slot> -->
+  <button class="btn">
     <slot></slot>
   </button>
 </template>

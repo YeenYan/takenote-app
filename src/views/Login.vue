@@ -25,11 +25,7 @@
           <vee-field name="password" type="password" placeholder="Password" />
         </div>
         <ErrorMessage class="error-text" name="password" />
-        <base-button
-          color="yellow"
-          class="login-register-btn"
-          type="submit"
-          @click="login"
+        <base-button class="login-register-btn yellow" type="submit" @click="login"
           >Log in</base-button
         >
       </div>

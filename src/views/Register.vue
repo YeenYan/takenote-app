@@ -44,9 +44,7 @@
           />
         </div>
         <ErrorMessage class="error-text" name="confirm_password" />
-        <base-button color="purple" class="login-register-btn" type="submit"
-          >Sign up</base-button
-        >
+        <base-button class="login-register-btn purple" type="submit">Sign up</base-button>
       </div>
 
       <div class="signin-signup__wrapper">
