@@ -25,8 +25,11 @@ const db = firebase.firestore();
 // perform operations such as reading, writing, updating or deleting data in the "users" collection of the Firestore database
 const usersCollection = db.collection('users');
 
+const labelsCollection = db.collection('labels');
+
 export {
   auth,
   db,
-  usersCollection
+  usersCollection,
+  labelsCollection
 };

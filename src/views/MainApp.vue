@@ -1,49 +1,48 @@
 <template>
   <div class="mainApp__container">
-    <header class="header__container mobile-margin">
-      <div class="logo__wrapper">
-        <img src="../assets/logo.png" alt="" />
-      </div>
-
-      <!-- CTA -->
-      <div class="cta__wrapper">
-        <base-button class="purple">New Note</base-button>
-        <p>4 notes</p>
-      </div>
-    </header>
-
-    <!-- Label Notes -->
-    <nav class="labels__container">
-      <div class="labels__wrapper">
-        <div class="label-text__wrapper mobile-margin" @click.prevent="toggleLabelList">
-          <p>LABELS</p>
-          <span class="material-symbols-outlined" :class="labelList ? 'active' : ''">
-            expand_more
-          </span>
-          <!-- {{ labelIcon }} -->
+    <div class="side__container">
+      <header class="header__container mobile-margin">
+        <div class="logo__wrapper">
+          <img src="../assets/logo.png" alt="" />
         </div>
-      </div>
-      <ul class="label-lists__wrapper" v-if="labelList">
-        <li class="label-list">
-          <div class="mobile-margin">Dessert Ideas</div>
-        </li>
-        <li class="label-list">
-          <div class="mobile-margin">Grocery</div>
-        </li>
-        <li class="label-list">
-          <div class="mobile-margin">Meeting Notes</div>
-        </li>
-        <li class="label-list">
-          <div class="mobile-margin">My Ideas</div>
-        </li>
-      </ul>
-    </nav>
 
-    <!-- Footer for medium/large screen size -->
-    <footer class="footer__wrapper" v-if="!mobile">
-      <p>Copyright: © {{ getCurrentYear }}</p>
-      <p>Design & Built by Mark Ian Reyes</p>
-    </footer>
+        <!-- CTA -->
+        <div class="cta__wrapper">
+          <base-button class="purple" @click.prevent="showInputLabelModal"
+            >New Note</base-button
+          >
+          <p>4 notes</p>
+        </div>
+      </header>
+
+      <!-- Label Notes -->
+      <nav class="labels__container">
+        <div class="labels__wrapper">
+          <div class="label-text__wrapper mobile-margin" @click.prevent="toggleLabelList">
+            <p>LABELS</p>
+            <span
+              class="material-symbols-outlined"
+              :class="labelList ? 'active' : ''"
+              v-if="!labelList"
+            >
+              expand_more
+            </span>
+            <!-- {{ labelIcon }} -->
+          </div>
+        </div>
+        <ul class="label-lists__wrapper" v-if="labelList">
+          <li class="label-list" v-for="label in labels" :key="label.docID">
+            <div class="mobile-margin">{{ label.labelTitle }}</div>
+          </li>
+        </ul>
+      </nav>
+
+      <!-- Footer for medium/large screen size -->
+      <footer class="footer__wrapper" v-if="!mobile">
+        <p>Copyright: © {{ getCurrentYear }}</p>
+        <p>Design & Built by Mark Ian Reyes</p>
+      </footer>
+    </div>
 
     <main class="main__container">
       <div class="main-header__container">
@@ -95,26 +94,75 @@
               </p>
             </div>
           </li>
+          <li class="noteList__wrapper">
+            <div class="top-color"></div>
+
+            <div class="noteList-header__wrapper">
+              <p class="notelist-title">Cake Recipe</p>
+              <p class="notelist-date">February 1, 2023 4:00 PM Wed</p>
+            </div>
+
+            <div class="noteList-content__wrapper">
+              <p>
+                Lorem ipsum dolor sit, amet consectetur adipisicing elit. Ullam ad
+                repellat debitis nisi iusto ipsum explicabo sint repellendus modi ipsa
+                consectetur hic provident, odio impedit odit similique. Sequi, dicta
+                similique.
+              </p>
+            </div>
+          </li>
+          <li class="noteList__wrapper">
+            <div class="top-color"></div>
+
+            <div class="noteList-header__wrapper">
+              <p class="notelist-title">Cake Recipe</p>
+              <p class="notelist-date">February 1, 2023 4:00 PM Wed</p>
+            </div>
+
+            <div class="noteList-content__wrapper">
+              <p>
+                Lorem ipsum dolor sit, amet consectetur adipisicing elit. Ullam ad
+                repellat debitis nisi iusto ipsum explicabo sint repellendus modi ipsa
+                consectetur hic provident, odio impedit odit similique. Sequi, dicta
+                similique.
+              </p>
+            </div>
+          </li>
         </ul>
       </div>
     </main>
 
     <!-- Footer for mobile size -->
-    <footer class="footer__wrapper">
+    <footer class="footer__wrapper" v-if="mobile">
       <p>Copyright: © {{ getCurrentYear }}</p>
       <p>Design & Built by Mark Ian Reyes</p>
     </footer>
   </div>
+
+  <teleport to="body">
+    <InputLabelModal />
+  </teleport>
 </template>
 
 <script>
+import { mapActions } from "pinia";
+import useModalStore from "../stores/modal";
+
+import { labelsCollection, auth } from "../includes/firebase";
+
+import InputLabelModal from "../components/modals/InputLabel.vue";
+
 export default {
   name: "MainApp",
+  components: {
+    InputLabelModal,
+  },
   data() {
     return {
       year: "",
       mobile: true,
       labelList: false,
+      labels: [],
     };
   },
   computed: {
@@ -125,9 +173,53 @@ export default {
       return !this.labelList ? "expand_more" : "expand_less";
     },
   },
+  mounted() {
+    this.updateScreenSize(); // Call the method initially to set the initial screen size
+
+    window.addEventListener("resize", this.updateScreenSize); // Listen for window resize events
+  },
+  beforeUnmount() {
+    window.removeEventListener("resize", this.updateScreenSize); // Remove the resize event listener before component is unmounted
+  },
+  async created() {
+    this.getLabels();
+    // const snapshot = await labelsCollection
+    //   .where("uid", "==", auth.currentUser.uid)
+    //   .get();
+    // snapshot.forEach(this.addLabel);
+  },
   methods: {
+    ...mapActions(useModalStore, ["showInputLabelModal"]),
+    addLabel(document) {
+      const label = {
+        ...document.data(),
+        docID: document.id,
+      };
+      this.labels.push(label);
+    },
+    async getLabels() {
+      // let snapshots;
+
+      // await labelsCollection.get();
+
+      const snapshot = await labelsCollection
+        .where("uid", "==", auth.currentUser.uid)
+        .get();
+
+      snapshot.forEach((document) => {
+        this.labels.push({
+          ...document.data(),
+          docID: document.id,
+        });
+      });
+    },
     toggleLabelList() {
       this.labelList = !this.labelList;
+    },
+    updateScreenSize() {
+      // Update the screenSize data property based on the current window inner width
+      this.mobile = window.innerWidth > 600 ? false : true;
+      this.labelList = window.innerWidth > 600 ? true : false;
     },
   },
 };
@@ -234,6 +326,10 @@ export default {
   @apply flex flex-col items-center mt-[2.375rem] h-screen;
 }
 
+.main-noteList__container > ul {
+  @apply grid gap-6;
+}
+
 .noteList__wrapper {
   @apply bg-shades-white drop-shadow-lg w-full max-w-[18rem] pt-[2.5rem] px-[.938rem] pb-[2rem] rounded-lg overflow-hidden;
 }
@@ -264,5 +360,100 @@ export default {
 
 .footer__wrapper {
   @apply text-center text-xs text-neutral-500 py-[1rem] w-full mt-auto;
+}
+
+/***********************************************************
+***********************************************************/
+
+/**********************************************
+**** Media Queries Properties
+**********************************************/
+
+@media (min-width: 600px) {
+  .mainApp__container {
+    /* display: grid;
+    grid-template-columns: 1fr 1.5fr; */
+    display: flex;
+    height: 100vh;
+    /* @apply justify-items-stretch; */
+  }
+
+  /**********************************************
+**** Main Header Properties
+**********************************************/
+
+  .main__container {
+    @apply w-full;
+  }
+
+  .main-header__wrapper {
+    @apply max-w-[62.5rem] ml-[2rem];
+  }
+
+  /**********************************************
+**** Note Per List Properties
+**********************************************/
+  .main-noteList__container {
+    @apply items-start max-w-[62.5rem] ml-[2rem] h-fit;
+  }
+
+  .main-noteList__container > ul {
+    /* display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(18.5rem, 1fr));
+    justify-content: flex-start; */
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    width: 100%;
+  }
+
+  /**********************************************
+**** SideBar Properties
+**********************************************/
+
+  .side__container {
+    @apply relative border-r-[.5px] border-neutral-300 w-full max-w-[23rem];
+  }
+
+  .footer__wrapper {
+    @apply absolute left-0 bottom-0;
+  }
+}
+
+@media (min-width: 1100px) {
+  /**********************************************
+**** SideBar Properties
+**********************************************/
+
+  .cta__wrapper {
+    @apply flex justify-between items-center;
+  }
+
+  .cta__wrapper > button {
+    @apply w-fit;
+  }
+
+  .cta__wrapper > p {
+    @apply m-0;
+  }
+
+  /**********************************************
+**** Main Header Properties
+**********************************************/
+  .action-note__wrapper {
+    @apply flex-row justify-stretch;
+  }
+
+  .search-input__wrapper {
+    @apply w-full max-w-[32rem];
+  }
+
+  .btn__wrapper {
+    @apply flex-row w-full;
+  }
+
+  .btn__wrapper > button {
+    @apply w-full;
+  }
 }
 </style>
