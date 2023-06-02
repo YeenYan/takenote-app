@@ -5,6 +5,10 @@ export default defineStore("modal", {
     isOpen: false,
     modalAnimation: false,
 
+    inputLabelModal: false,
+
+    inputNoteModal: false,
+
   }),
   getters: {
     hiddenClass(state) {
@@ -15,10 +19,18 @@ export default defineStore("modal", {
     closeAll() {
       this.isOpen = false;
       this.modalAnimation = false;
+      this.inputLabelModal = false;
+      this.inputNoteModal = false;
     },
     showInputLabelModal() {
       this.isOpen = true;
       this.modalAnimation = true;
+      this.inputLabelModal = true;
+    },
+    showInputNoteModal() {
+      this.isOpen = true;
+      this.modalAnimation = true;
+      this.inputNoteModal = true;
     }
   }
 });

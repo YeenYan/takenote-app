@@ -64,6 +64,9 @@ export default {
       // Clear the input field
       this.labelTitle = "";
 
+      // Close Modal
+      this.closeAll();
+
       window.location.reload();
     },
   },

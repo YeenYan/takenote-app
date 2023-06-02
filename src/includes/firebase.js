@@ -27,9 +27,12 @@ const usersCollection = db.collection('users');
 
 const labelsCollection = db.collection('labels');
 
+const notesCollection = db.collection('notes');
+
 export {
   auth,
   db,
   usersCollection,
-  labelsCollection
+  labelsCollection,
+  notesCollection
 };

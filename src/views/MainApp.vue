@@ -31,7 +31,12 @@
           </div>
         </div>
         <ul class="label-lists__wrapper" v-if="labelList">
-          <li class="label-list" v-for="label in labels" :key="label.docID">
+          <li
+            class="label-list"
+            v-for="label in labels"
+            :key="label.docID"
+            @click.prevent="displayNote(label.docID, label.labelTitle)"
+          >
             <div class="mobile-margin">{{ label.labelTitle }}</div>
           </li>
         </ul>
@@ -49,7 +54,7 @@
         <div class="main-header__wrapper mobile-margin">
           <!-- Note Title -->
           <div class="title-note__wrapper">
-            <h2>Dessert Ideas</h2>
+            <h2>{{ labelTitle }}</h2>
             <div class="cta-icon__wrapper">
               <span class="material-symbols-outlined"> edit </span>
               <span class="material-symbols-outlined"> delete </span>
@@ -66,7 +71,9 @@
 
             <!-- Buttons -->
             <div class="btn__wrapper">
-              <base-button class="yellow">Create Note</base-button>
+              <base-button class="yellow" @click.prevent="showInputNoteModal"
+                >Create Note</base-button
+              >
               <base-button class="blue">Create List</base-button>
             </div>
           </div>
@@ -140,22 +147,25 @@
   </div>
 
   <teleport to="body">
-    <InputLabelModal />
+    <InputLabelModal v-if="inputLabelModal" />
+    <InputNoteModal v-if="inputNoteModal" :labelID="labelID" />
   </teleport>
 </template>
 
 <script>
-import { mapActions } from "pinia";
+import { mapActions, mapState } from "pinia";
 import useModalStore from "../stores/modal";
 
 import { labelsCollection, auth } from "../includes/firebase";
 
 import InputLabelModal from "../components/modals/InputLabel.vue";
+import InputNoteModal from "../components/modals/InputNote.vue";
 
 export default {
   name: "MainApp",
   components: {
     InputLabelModal,
+    InputNoteModal,
   },
   data() {
     return {
@@ -163,15 +173,21 @@ export default {
       mobile: true,
       labelList: false,
       labels: [],
+      labelTitle: "",
+      labelID: null,
     };
   },
   computed: {
+    ...mapState(useModalStore, ["inputLabelModal", "inputNoteModal"]),
     getCurrentYear() {
       return (this.year = new Date().getFullYear());
     },
     labelIcon() {
       return !this.labelList ? "expand_more" : "expand_less";
     },
+    // activeLabel() {
+    //   return this.labelTitle;
+    // },
   },
   mounted() {
     this.updateScreenSize(); // Call the method initially to set the initial screen size
@@ -182,14 +198,16 @@ export default {
     window.removeEventListener("resize", this.updateScreenSize); // Remove the resize event listener before component is unmounted
   },
   async created() {
-    this.getLabels();
-    // const snapshot = await labelsCollection
-    //   .where("uid", "==", auth.currentUser.uid)
-    //   .get();
-    // snapshot.forEach(this.addLabel);
+    // this.getLabels();
+
+    // Retreive Label title fro firestore base on UID
+    const snapshot = await labelsCollection
+      .where("uid", "==", auth.currentUser.uid)
+      .get();
+    snapshot.forEach(this.addLabel);
   },
   methods: {
-    ...mapActions(useModalStore, ["showInputLabelModal"]),
+    ...mapActions(useModalStore, ["showInputLabelModal", "showInputNoteModal"]),
     addLabel(document) {
       const label = {
         ...document.data(),
@@ -197,21 +215,26 @@ export default {
       };
       this.labels.push(label);
     },
-    async getLabels() {
-      // let snapshots;
+    // async getLabels() {
+    //   // let snapshots;
 
-      // await labelsCollection.get();
+    //   // await labelsCollection.get();
 
-      const snapshot = await labelsCollection
-        .where("uid", "==", auth.currentUser.uid)
-        .get();
+    //   const snapshot = await labelsCollection
+    //     .where("uid", "==", auth.currentUser.uid)
+    //     .get();
 
-      snapshot.forEach((document) => {
-        this.labels.push({
-          ...document.data(),
-          docID: document.id,
-        });
-      });
+    //   snapshot.forEach((document) => {
+    //     this.labels.push({
+    //       ...document.data(),
+    //       docID: document.id,
+    //     });
+    //   });
+    // },
+    displayNote(docId, title) {
+      // alert(title);
+      this.labelTitle = title;
+      this.labelID = docId;
     },
     toggleLabelList() {
       this.labelList = !this.labelList;
