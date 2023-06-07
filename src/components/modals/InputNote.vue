@@ -160,6 +160,10 @@ export default {
 
       // SAVE DATA TO THE FIRESTORE
       await notesCollection.add(notesContent);
+
+      this.$emit("child");
+
+      this.closeAll();
     },
     handleInput(event) {
       this.content = event.target.innerHTML;

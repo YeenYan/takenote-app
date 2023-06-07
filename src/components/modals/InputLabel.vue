@@ -49,9 +49,25 @@ export default {
   methods: {
     ...mapActions(useModalStore, ["closeAll"]),
     async upload(values) {
+      // For todays Date & time
+      const currentDate = new Date();
+
+      const options = {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: "numeric",
+        minute: "numeric",
+        hour12: true,
+        weekday: "short",
+      };
+
+      const formattedDate = currentDate.toLocaleString("en-US", options);
+
       const label = {
         uid: auth.currentUser.uid,
         labelTitle: values.labelTitle,
+        date: formattedDate,
       };
 
       this.labels.push(label);
@@ -67,7 +83,9 @@ export default {
       // Close Modal
       this.closeAll();
 
-      window.location.reload();
+      this.$emit("display-label");
+
+      // window.location.reload();
     },
   },
 };

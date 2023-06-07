@@ -5,6 +5,8 @@ import { auth, usersCollection } from "../includes/firebase";
 export default defineStore("user", {
   state: () => ({
     userLoggedIn: false,
+
+    // retrieveLabel: false
   }),
   actions: {
 

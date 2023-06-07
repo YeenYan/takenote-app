@@ -84,57 +84,7 @@
       <div class="main-noteList__container mobile-margin">
         <!-- Note List -->
         <ul>
-          <li class="noteList__wrapper">
-            <div class="top-color"></div>
-
-            <div class="noteList-header__wrapper">
-              <p class="notelist-title">Cake Recipe</p>
-              <p class="notelist-date">February 1, 2023 4:00 PM Wed</p>
-            </div>
-
-            <div class="noteList-content__wrapper">
-              <p>
-                Lorem ipsum dolor sit, amet consectetur adipisicing elit. Ullam ad
-                repellat debitis nisi iusto ipsum explicabo sint repellendus modi ipsa
-                consectetur hic provident, odio impedit odit similique. Sequi, dicta
-                similique.
-              </p>
-            </div>
-          </li>
-          <li class="noteList__wrapper">
-            <div class="top-color"></div>
-
-            <div class="noteList-header__wrapper">
-              <p class="notelist-title">Cake Recipe</p>
-              <p class="notelist-date">February 1, 2023 4:00 PM Wed</p>
-            </div>
-
-            <div class="noteList-content__wrapper">
-              <p>
-                Lorem ipsum dolor sit, amet consectetur adipisicing elit. Ullam ad
-                repellat debitis nisi iusto ipsum explicabo sint repellendus modi ipsa
-                consectetur hic provident, odio impedit odit similique. Sequi, dicta
-                similique.
-              </p>
-            </div>
-          </li>
-          <li class="noteList__wrapper">
-            <div class="top-color"></div>
-
-            <div class="noteList-header__wrapper">
-              <p class="notelist-title">Cake Recipe</p>
-              <p class="notelist-date">February 1, 2023 4:00 PM Wed</p>
-            </div>
-
-            <div class="noteList-content__wrapper">
-              <p>
-                Lorem ipsum dolor sit, amet consectetur adipisicing elit. Ullam ad
-                repellat debitis nisi iusto ipsum explicabo sint repellendus modi ipsa
-                consectetur hic provident, odio impedit odit similique. Sequi, dicta
-                similique.
-              </p>
-            </div>
-          </li>
+          <NoteItem :notes="notes" />
         </ul>
       </div>
     </main>
@@ -147,8 +97,8 @@
   </div>
 
   <teleport to="body">
-    <InputLabelModal v-if="inputLabelModal" />
-    <InputNoteModal v-if="inputNoteModal" :labelID="labelID" />
+    <InputLabelModal v-if="inputLabelModal" @display-label="fetchLabel" />
+    <InputNoteModal v-if="inputNoteModal" :labelID="labelID" @child="fetchNotes" />
   </teleport>
 </template>
 
@@ -156,16 +106,18 @@
 import { mapActions, mapState } from "pinia";
 import useModalStore from "../stores/modal";
 
-import { labelsCollection, auth } from "../includes/firebase";
+import { labelsCollection, notesCollection, auth } from "../includes/firebase";
 
 import InputLabelModal from "../components/modals/InputLabel.vue";
 import InputNoteModal from "../components/modals/InputNote.vue";
+import NoteItem from "../components/NoteItem.vue";
 
 export default {
   name: "MainApp",
   components: {
     InputLabelModal,
     InputNoteModal,
+    NoteItem,
   },
   data() {
     return {
@@ -173,6 +125,7 @@ export default {
       mobile: true,
       labelList: false,
       labels: [],
+      notes: [],
       labelTitle: "",
       labelID: null,
     };
@@ -185,12 +138,11 @@ export default {
     labelIcon() {
       return !this.labelList ? "expand_more" : "expand_less";
     },
-    // activeLabel() {
-    //   return this.labelTitle;
-    // },
   },
   mounted() {
     this.updateScreenSize(); // Call the method initially to set the initial screen size
+
+    this.fetchNotes();
 
     window.addEventListener("resize", this.updateScreenSize); // Listen for window resize events
   },
@@ -198,13 +150,13 @@ export default {
     window.removeEventListener("resize", this.updateScreenSize); // Remove the resize event listener before component is unmounted
   },
   async created() {
-    // this.getLabels();
-
-    // Retreive Label title fro firestore base on UID
+    // Retreive Label title from firestore base on UID
     const snapshot = await labelsCollection
       .where("uid", "==", auth.currentUser.uid)
       .get();
     snapshot.forEach(this.addLabel);
+
+    this.fetchNotes();
   },
   methods: {
     ...mapActions(useModalStore, ["showInputLabelModal", "showInputNoteModal"]),
@@ -215,26 +167,43 @@ export default {
       };
       this.labels.push(label);
     },
-    // async getLabels() {
-    //   // let snapshots;
+    async fetchLabel() {
+      this.labels = []; //clear the existing labels array
+      // Retreive Label title from firestore base on UID
+      const snapshot = await labelsCollection
+        .where("uid", "==", auth.currentUser.uid)
+        .orderBy("date", "desc")
+        .get();
+      snapshot.forEach(this.addLabel);
+    },
+    async fetchNotes() {
+      try {
+        const notesSnapshot = await notesCollection
+          .where("lid", "==", this.labelID)
+          .orderBy("date", "desc")
+          .get();
 
-    //   // await labelsCollection.get();
+        this.notes = []; //clear the existing notes array
 
-    //   const snapshot = await labelsCollection
-    //     .where("uid", "==", auth.currentUser.uid)
-    //     .get();
+        notesSnapshot.forEach((doc) => {
+          const noteData = doc.data();
+          const note = {
+            ...noteData,
+            docID: doc.id,
+          };
+          this.notes.push(note);
+        });
 
-    //   snapshot.forEach((document) => {
-    //     this.labels.push({
-    //       ...document.data(),
-    //       docID: document.id,
-    //     });
-    //   });
-    // },
+        console.log(this.notes);
+      } catch (error) {
+        console.error(error);
+      }
+    },
     displayNote(docId, title) {
-      // alert(title);
       this.labelTitle = title;
       this.labelID = docId;
+      this.fetchNotes();
+      console.log(this.notes);
     },
     toggleLabelList() {
       this.labelList = !this.labelList;
@@ -346,35 +315,11 @@ export default {
 **********************************************/
 
 .main-noteList__container {
-  @apply flex flex-col items-center mt-[2.375rem] h-screen;
+  @apply flex flex-col items-center mt-[2.375rem] h-auto;
 }
 
 .main-noteList__container > ul {
-  @apply grid gap-6;
-}
-
-.noteList__wrapper {
-  @apply bg-shades-white drop-shadow-lg w-full max-w-[18rem] pt-[2.5rem] px-[.938rem] pb-[2rem] rounded-lg overflow-hidden;
-}
-
-.top-color {
-  @apply absolute top-0 left-0 bg-yellow-500 w-full h-[1.5rem];
-}
-
-.noteList-header__wrapper {
-  @apply mb-[1.5rem];
-}
-
-.notelist-title {
-  @apply text-xl text-neutral-700 font-semibold;
-}
-
-.notelist-date {
-  @apply text-[.6rem] text-neutral-500;
-}
-
-.noteList-content__wrapper {
-  @apply text-sm text-neutral-600;
+  @apply flex flex-col gap-6 items-center w-full;
 }
 
 /**********************************************
