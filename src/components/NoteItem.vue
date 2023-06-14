@@ -1,5 +1,12 @@
 <template>
-  <li class="noteList__wrapper" v-for="note in notes" :key="note.docID">
+  <li
+    class="noteList__wrapper"
+    v-for="note in notes"
+    :key="note.docID"
+    @click.prevent="
+      showUpdateNoteModal(note.docID, note.color, note.noteTitle, note.date, note.content)
+    "
+  >
     <div class="top-color" :class="note.color"></div>
 
     <div class="noteList-header__wrapper">
@@ -14,15 +21,21 @@
 </template>
 
 <script>
+import { mapActions } from "pinia";
+import useModalStore from "../stores/modal";
+
 export default {
   props: ["notes"],
   name: "NoteItem",
+  methods: {
+    ...mapActions(useModalStore, ["showUpdateNoteModal"]),
+  },
 };
 </script>
 
 <style lang="postcss" scoped>
 .noteList__wrapper {
-  @apply bg-shades-white drop-shadow-lg w-full max-w-[18rem] pt-[2.5rem] px-[.938rem] pb-[2rem] rounded-lg overflow-hidden;
+  @apply bg-shades-white drop-shadow-lg w-full max-w-[18rem] pt-[2.5rem] px-[.938rem] pb-[2rem] rounded-lg overflow-hidden cursor-pointer h-[10rem];
 }
 
 .top-color {
@@ -66,6 +79,6 @@ export default {
 }
 
 .noteList-content__wrapper {
-  @apply text-sm text-neutral-600;
+  @apply text-sm text-neutral-600 h-[50%] max-h-[4rem] overflow-y-hidden;
 }
 </style>

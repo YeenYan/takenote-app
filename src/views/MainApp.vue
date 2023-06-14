@@ -11,7 +11,7 @@
           <base-button class="purple" @click.prevent="showInputLabelModal"
             >New Note</base-button
           >
-          <p>4 notes</p>
+          <p>Total Notes: {{ labels.length }}</p>
         </div>
       </header>
 
@@ -23,11 +23,10 @@
             <span
               class="material-symbols-outlined"
               :class="labelList ? 'active' : ''"
-              v-if="!labelList"
+              v-if="mobile"
             >
               expand_more
             </span>
-            <!-- {{ labelIcon }} -->
           </div>
         </div>
         <ul class="label-lists__wrapper" v-if="labelList">
@@ -56,8 +55,15 @@
           <div class="title-note__wrapper">
             <h2>{{ labelTitle }}</h2>
             <div class="cta-icon__wrapper">
-              <span class="material-symbols-outlined"> edit </span>
-              <span class="material-symbols-outlined"> delete </span>
+              <span
+                class="material-symbols-outlined"
+                @click.prevent="showUpdateLabelModal()"
+              >
+                edit
+              </span>
+              <span class="material-symbols-outlined" @click.prevent="deleteLabel">
+                delete
+              </span>
             </div>
           </div>
 
@@ -98,7 +104,22 @@
 
   <teleport to="body">
     <InputLabelModal v-if="inputLabelModal" @display-label="fetchLabel" />
-    <InputNoteModal v-if="inputNoteModal" :labelID="labelID" @child="fetchNotes" />
+    <UpdateLabelModal
+      v-if="updateLabelModal"
+      :labelID="labelID"
+      :updateTitle="labelTitle"
+      @display-label="fetchLabel"
+    />
+    <InputNoteModal v-if="inputNoteModal" :noteLabelID="labelID" @child="fetchNotes" />
+    <UpdateNoteModal
+      v-if="updateNoteModal"
+      :noteID="updateID"
+      :color="updateColor"
+      :title="updateNoteTitle"
+      :date="updateDate"
+      :noteContent="updateContent"
+      @child="fetchNotes"
+    />
   </teleport>
 </template>
 
@@ -109,18 +130,23 @@ import useModalStore from "../stores/modal";
 import { labelsCollection, notesCollection, auth } from "../includes/firebase";
 
 import InputLabelModal from "../components/modals/InputLabel.vue";
+import UpdateLabelModal from "../components/modals/UpdateLabel.vue";
 import InputNoteModal from "../components/modals/InputNote.vue";
+import UpdateNoteModal from "../components/modals/UpdateNote.vue";
 import NoteItem from "../components/NoteItem.vue";
 
 export default {
   name: "MainApp",
   components: {
     InputLabelModal,
+    UpdateLabelModal,
     InputNoteModal,
+    UpdateNoteModal,
     NoteItem,
   },
   data() {
     return {
+      isToggleClickable: false,
       year: "",
       mobile: true,
       labelList: false,
@@ -131,12 +157,20 @@ export default {
     };
   },
   computed: {
-    ...mapState(useModalStore, ["inputLabelModal", "inputNoteModal"]),
+    ...mapState(useModalStore, [
+      "inputLabelModal",
+      "updateLabelModal",
+      "updateLabelText",
+      "inputNoteModal",
+      "updateNoteModal",
+      "updateID",
+      "updateColor",
+      "updateNoteTitle",
+      "updateDate",
+      "updateContent",
+    ]),
     getCurrentYear() {
       return (this.year = new Date().getFullYear());
-    },
-    labelIcon() {
-      return !this.labelList ? "expand_more" : "expand_less";
     },
   },
   mounted() {
@@ -153,19 +187,49 @@ export default {
     // Retreive Label title from firestore base on UID
     const snapshot = await labelsCollection
       .where("uid", "==", auth.currentUser.uid)
+      .orderBy("date", "desc")
       .get();
     snapshot.forEach(this.addLabel);
 
     this.fetchNotes();
   },
   methods: {
-    ...mapActions(useModalStore, ["showInputLabelModal", "showInputNoteModal"]),
+    ...mapActions(useModalStore, [
+      "showInputLabelModal",
+      "showUpdateLabelModal",
+      "showInputNoteModal",
+      "showUpdateNoteModal",
+    ]),
     addLabel(document) {
       const label = {
         ...document.data(),
         docID: document.id,
       };
       this.labels.push(label);
+
+      // Retrieve the latest/first element in the array
+      const firstLabel = this.labels[0];
+
+      this.labelTitle = firstLabel.labelTitle;
+      this.labelID = firstLabel.docID;
+    },
+    async deleteLabel() {
+      // Retrieve all notes with the specified labelID
+      const notesQuerySnapshot = await notesCollection
+        .where("lid", "==", this.labelID)
+        .get();
+
+      await labelsCollection.doc(this.labelID).delete();
+
+      // Delete each note document
+      notesQuerySnapshot.forEach((noteDoc) => {
+        notesCollection.doc(noteDoc.id).delete();
+      });
+
+      this.labelTitle = "";
+
+      this.fetchLabel();
+      this.fetchNotes();
     },
     async fetchLabel() {
       this.labels = []; //clear the existing labels array
@@ -203,10 +267,16 @@ export default {
       this.labelTitle = title;
       this.labelID = docId;
       this.fetchNotes();
+
+      if (this.mobile) {
+        this.labelList = false;
+      }
       console.log(this.notes);
     },
     toggleLabelList() {
-      this.labelList = !this.labelList;
+      if (this.mobile) {
+        this.labelList = !this.labelList;
+      }
     },
     updateScreenSize() {
       // Update the screenSize data property based on the current window inner width
@@ -271,7 +341,7 @@ export default {
 }
 
 .label-list {
-  @apply text-base text-neutral-600 font-semibold py-[.938rem] border-b-[.5px] border-neutral-300;
+  @apply text-base text-neutral-600 font-semibold py-[.938rem] border-b-[.5px] border-neutral-300 cursor-pointer;
 }
 
 /**********************************************
@@ -370,6 +440,7 @@ export default {
     grid-template-columns: repeat(auto-fit, minmax(18.5rem, 1fr));
     justify-content: flex-start; */
     display: flex;
+    flex-direction: row;
     flex-wrap: wrap;
     justify-content: flex-start;
     width: 100%;

@@ -1,11 +1,11 @@
 <template>
   <modal-wrapper>
-    <vee-form class="noteList__wrapper" @submit="save">
+    <vee-form class="noteList__wrapper" @submit="update">
       <div class="top-color" :class="colorActive">
         <span class="material-symbols-outlined" @click.prevent="toggleNoteOptions">
           more_horiz
         </span>
-        <span class="material-symbols-outlined" @click,prevent="save()"> close </span>
+        <span class="material-symbols-outlined" @click.prevent="update"> close </span>
       </div>
 
       <div class="noteOption__wrapper" v-if="noteOption">
@@ -16,6 +16,10 @@
           <div class="blue" @click.prevent="pickColor('blue')"></div>
           <div class="purple" @click.prevent="pickColor('purple')"></div>
           <div class="gray" @click.prevent="pickColor('gray')"></div>
+        </div>
+        <div class="deleteNote__wrapper" @click.prevent="deleteNote">
+          <span class="material-symbols-outlined"> delete </span>
+          <p>Delete Note</p>
         </div>
       </div>
 
@@ -28,16 +32,15 @@
           @keydown="autoResize"
           placeholder="Input Title"
         ></textarea>
+        <!-- <p class="notelist-date">February 1, 2023 4:00 PM Wed</p> -->
       </div>
 
       <div
         ref="editableText"
         class="noteList-content__wrapper"
         contenteditable
-        @input="handleInput"
-        @focus="handleFocus"
-        @blur="handleBlur"
         id="editable-text"
+        v-html="noteContent"
       ></div>
 
       <div class="btnStyling__wrapper">
@@ -67,18 +70,21 @@ import { notesCollection } from "../../includes/firebase";
 import ModalWrapper from "../modals/ModalWrapper.vue";
 
 export default {
-  props: ["noteLabelID"],
+  props: ["noteID", "color", "title", "date", "noteContent"],
   components: { ModalWrapper },
-  name: "InputNote",
+  name: "UpdateNote",
   data() {
     return {
       noteOption: false,
-      colorActive: "yellow",
-      titleContent: "",
-      content: "",
-      placeholder: "Take a note...",
-      labelId: this.labelID,
+      colorActive: this.color,
+      titleContent: this.title,
+      previousTitle: this.title,
+      content: this.noteContent,
+      labelId: this.noteID,
     };
+  },
+  created() {
+    console.log(this.content);
   },
   computed: {},
   methods: {
@@ -121,24 +127,26 @@ export default {
     applyEdit(type) {
       this.editText(type);
     },
-    async save() {
-      if (this.titleContent === "") {
+    async update() {
+      // For the inputted content
+      const editableText = this.$refs.editableText;
+
+      // Check if the value is the same as previous data
+      if (
+        this.previousTitle === this.titleContent &&
+        this.content === editableText.innerHTML
+      ) {
         this.closeAll();
         return;
       } else {
-        // Check if theirs a content provided
-        if (this.placeholder === "Take a note...") {
-          // For the inputted content
-          this.content = " ";
+        // For the inputted content
+        const editableText = this.$refs.editableText;
+        this.content = editableText.innerHTML;
 
-          // alert(`content: ${(this.content = "")}`);
-          // return;
-        } else {
-          // For the inputted content
-          const editableText = this.$refs.editableText;
-          this.content = editableText.innerHTML;
-          // console.log(this.content);
-        }
+        // Check if content is Empty
+        this.content === ""
+          ? (this.content = " ")
+          : (this.content = editableText.innerHTML);
 
         // For todays Date & time
         const currentDate = new Date();
@@ -157,38 +165,34 @@ export default {
 
         // Notes Content Object
         const notesContent = {
-          lid: this.noteLabelID,
           noteTitle: this.titleContent,
           date: formattedDate,
           color: this.colorActive,
           content: this.content,
         };
 
-        // SAVE DATA TO THE FIRESTORE
-        await notesCollection.add(notesContent);
+        const docID = this.noteID;
+
+        // UPDATE DATA TO THE FIRESTORE
+        await notesCollection.doc(docID).update(notesContent);
 
         this.$emit("child");
 
         this.closeAll();
       }
     },
-    handleInput(event) {
-      this.content = event.target.innerHTML;
-    },
-    handleFocus(event) {
-      if (event.target.innerHTML === this.placeholder) {
-        event.target.innerHTML = "";
-      }
-    },
-    handleBlur(event) {
-      if (event.target.innerHTML === "") {
-        event.target.innerHTML = this.placeholder;
-      }
+    async deleteNote() {
+      const docID = this.noteID;
+      await notesCollection.doc(docID).delete();
+      this.$emit("child");
+      this.closeAll();
     },
   },
   mounted() {
     // auto focus to the Title Textarea
     this.$refs.myTextarea.focus();
+
+    // this.previousTitle = 'title'
 
     // Adjust height on mount
     this.autoResize();
@@ -292,6 +296,15 @@ export default {
 .top-color.gray,
 .color__wrapper > .gray {
   @apply bg-gray-500;
+}
+
+.deleteNote__wrapper {
+  @apply flex items-center bg-neutral-600 h-[3rem] cursor-pointer;
+}
+
+.deleteNote__wrapper > span,
+.deleteNote__wrapper > p {
+  @apply text-shades-white ml-[1rem];
 }
 
 /**********************************************
