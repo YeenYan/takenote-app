@@ -5,7 +5,7 @@
         <span class="material-symbols-outlined" @click.prevent="toggleNoteOptions">
           more_horiz
         </span>
-        <span class="material-symbols-outlined" @click,prevent="save()"> close </span>
+        <span class="material-symbols-outlined" @click.prevent="save"> close </span>
       </div>
 
       <div class="noteOption__wrapper" v-if="noteOption">
@@ -126,51 +126,47 @@ export default {
         this.closeAll();
         return;
       } else {
-        // Check if theirs a content provided
-        if (this.placeholder === "Take a note...") {
-          // For the inputted content
+        const editableText = this.$refs.editableText;
+
+        if (editableText.innerHTML === "Take a note...") {
           this.content = " ";
-
-          // alert(`content: ${(this.content = "")}`);
-          // return;
+          console.log(this.content);
         } else {
-          // For the inputted content
-          const editableText = this.$refs.editableText;
           this.content = editableText.innerHTML;
-          // console.log(this.content);
+          console.log(this.content);
         }
-
-        // For todays Date & time
-        const currentDate = new Date();
-
-        const options = {
-          year: "numeric",
-          month: "long",
-          day: "numeric",
-          hour: "numeric",
-          minute: "numeric",
-          hour12: true,
-          weekday: "short",
-        };
-
-        const formattedDate = currentDate.toLocaleString("en-US", options);
-
-        // Notes Content Object
-        const notesContent = {
-          lid: this.noteLabelID,
-          noteTitle: this.titleContent,
-          date: formattedDate,
-          color: this.colorActive,
-          content: this.content,
-        };
-
-        // SAVE DATA TO THE FIRESTORE
-        await notesCollection.add(notesContent);
-
-        this.$emit("child");
-
-        this.closeAll();
       }
+
+      // For todays Date & time
+      const currentDate = new Date();
+
+      const options = {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: "numeric",
+        minute: "numeric",
+        hour12: true,
+        weekday: "short",
+      };
+
+      const formattedDate = currentDate.toLocaleString("en-US", options);
+
+      // Notes Content Object
+      const notesContent = {
+        lid: this.noteLabelID,
+        noteTitle: this.titleContent,
+        date: formattedDate,
+        color: this.colorActive,
+        content: this.content,
+      };
+
+      // SAVE DATA TO THE FIRESTORE
+      await notesCollection.add(notesContent);
+
+      this.$emit("display-note");
+
+      this.closeAll();
     },
     handleInput(event) {
       this.content = event.target.innerHTML;

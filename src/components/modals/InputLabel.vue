@@ -108,6 +108,10 @@ p {
   @apply text-sm text-neutral-500 w-full px-[.5rem] py-[.7rem] bg-neutral-100 outline-0 rounded;
 }
 
+.input > input {
+  @apply bg-neutral-100;
+}
+
 .btn__wrapper {
   @apply grid grid-cols-2 w-full;
 }

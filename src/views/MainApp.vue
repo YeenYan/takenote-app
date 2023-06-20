@@ -29,6 +29,12 @@
             </span>
           </div>
         </div>
+
+        <!-- ====================================================== -->
+        <!-- Loading -->
+        <LabelLoading v-if="label_show_loading" class="labelLoading" />
+        <!-- ====================================================== -->
+
         <ul class="label-lists__wrapper" v-if="labelList">
           <li
             class="label-list"
@@ -43,12 +49,16 @@
 
       <!-- Footer for medium/large screen size -->
       <footer class="footer__wrapper" v-if="!mobile">
+        <div class="logout__wrapper">
+          <span class="material-symbols-outlined"> logout </span>
+          <button @click.prevent="logout" class="logoutBtn">Logout</button>
+        </div>
         <p>Copyright: © {{ getCurrentYear }}</p>
         <p>Design & Built by Mark Ian Reyes</p>
       </footer>
     </div>
 
-    <main class="main__container">
+    <main class="main__container" v-if="labels.length !== 0">
       <div class="main-header__container">
         <div class="main-header__wrapper mobile-margin">
           <!-- Note Title -->
@@ -72,7 +82,7 @@
             <!-- Search Box -->
             <div class="search-input__wrapper">
               <span class="material-symbols-outlined"> search </span>
-              <input type="text" placeholder="Search" />
+              <input type="text" placeholder="Search" v-model="searchQuery" />
             </div>
 
             <!-- Buttons -->
@@ -80,23 +90,37 @@
               <base-button class="yellow" @click.prevent="showInputNoteModal"
                 >Create Note</base-button
               >
-              <base-button class="blue">Create List</base-button>
+              <!-- <base-button class="blue">Create List</base-button> -->
             </div>
           </div>
         </div>
       </div>
 
+      <EmptyNoteUI class="emptyNote" v-if="emptyNotes" />
+
       <!-- Note Lists -->
       <div class="main-noteList__container mobile-margin">
         <!-- Note List -->
         <ul>
-          <NoteItem :notes="notes" />
+          <NoteItem :notes="filteredNotes" />
         </ul>
+
+        <NotesLoading class="notesLoader" v-if="notes_show_loading" />
+      </div>
+    </main>
+
+    <main class="emptyLabel__container" v-else>
+      <div>
+        <EmptyLabel class="emptyLabel" @add-label="showInputLabelModal" />
       </div>
     </main>
 
     <!-- Footer for mobile size -->
     <footer class="footer__wrapper" v-if="mobile">
+      <div class="logout__wrapper">
+        <span class="material-symbols-outlined"> logout </span>
+        <button @click.prevent="logout" class="logoutBtn">Logout</button>
+      </div>
       <p>Copyright: © {{ getCurrentYear }}</p>
       <p>Design & Built by Mark Ian Reyes</p>
     </footer>
@@ -110,7 +134,11 @@
       :updateTitle="labelTitle"
       @display-label="fetchLabel"
     />
-    <InputNoteModal v-if="inputNoteModal" :noteLabelID="labelID" @child="fetchNotes" />
+    <InputNoteModal
+      v-if="inputNoteModal"
+      :noteLabelID="labelID"
+      @display-note="fetchNotes"
+    />
     <UpdateNoteModal
       v-if="updateNoteModal"
       :noteID="updateID"
@@ -118,7 +146,7 @@
       :title="updateNoteTitle"
       :date="updateDate"
       :noteContent="updateContent"
-      @child="fetchNotes"
+      @display-note="fetchNotes"
     />
   </teleport>
 </template>
@@ -126,6 +154,7 @@
 <script>
 import { mapActions, mapState } from "pinia";
 import useModalStore from "../stores/modal";
+import router from "../router/index";
 
 import { labelsCollection, notesCollection, auth } from "../includes/firebase";
 
@@ -135,6 +164,12 @@ import InputNoteModal from "../components/modals/InputNote.vue";
 import UpdateNoteModal from "../components/modals/UpdateNote.vue";
 import NoteItem from "../components/NoteItem.vue";
 
+import EmptyNoteUI from "../components/emptyNotesUI.vue";
+import EmptyLabel from "../components/emptyLabel.vue";
+
+import LabelLoading from "../components/loader/LabelLoading.vue";
+import NotesLoading from "../components/loader/NotesLoading.vue";
+
 export default {
   name: "MainApp",
   components: {
@@ -143,6 +178,10 @@ export default {
     InputNoteModal,
     UpdateNoteModal,
     NoteItem,
+    EmptyNoteUI,
+    EmptyLabel,
+    LabelLoading,
+    NotesLoading,
   },
   data() {
     return {
@@ -152,8 +191,14 @@ export default {
       labelList: false,
       labels: [],
       notes: [],
+      emptyNotes: false,
       labelTitle: "",
       labelID: null,
+      searchQuery: "",
+      searchResults: [], // Array to store the search results
+
+      label_show_loading: false,
+      notes_show_loading: false,
     };
   },
   computed: {
@@ -172,6 +217,24 @@ export default {
     getCurrentYear() {
       return (this.year = new Date().getFullYear());
     },
+    // When searching
+    filteredNotes() {
+      if (this.searchQuery) {
+        const lowercaseQuery = this.searchQuery.toLowerCase();
+
+        return this.notes.filter((note) => {
+          const lowercaseTitle = note.noteTitle ? note.noteTitle.toLowerCase() : "";
+          const lowercaseContent = note.content ? note.content.toLowerCase() : "";
+
+          return (
+            lowercaseTitle.includes(lowercaseQuery) ||
+            lowercaseContent.includes(lowercaseQuery)
+          );
+        });
+      } else {
+        return this.notes;
+      }
+    },
   },
   mounted() {
     this.updateScreenSize(); // Call the method initially to set the initial screen size
@@ -179,19 +242,37 @@ export default {
     this.fetchNotes();
 
     window.addEventListener("resize", this.updateScreenSize); // Listen for window resize events
+
+    try {
+      if (auth.currentUser.uid) {
+        console.log("logged user");
+      } else {
+        console.log("not log");
+      }
+    } catch (error) {
+      router.push("/");
+    }
   },
   beforeUnmount() {
     window.removeEventListener("resize", this.updateScreenSize); // Remove the resize event listener before component is unmounted
   },
   async created() {
-    // Retreive Label title from firestore base on UID
-    const snapshot = await labelsCollection
-      .where("uid", "==", auth.currentUser.uid)
-      .orderBy("date", "desc")
-      .get();
-    snapshot.forEach(this.addLabel);
+    this.label_show_loading = true;
 
-    this.fetchNotes();
+    try {
+      // Retreive Label title from firestore base on UID
+      const snapshot = await labelsCollection
+        .where("uid", "==", auth.currentUser.uid)
+        .orderBy("date", "desc")
+        .get();
+      snapshot.forEach(this.addLabel);
+
+      this.label_show_loading = false;
+
+      this.fetchNotes();
+    } catch (error) {
+      console.log(error);
+    }
   },
   methods: {
     ...mapActions(useModalStore, [
@@ -229,9 +310,9 @@ export default {
       this.labelTitle = "";
 
       this.fetchLabel();
-      this.fetchNotes();
     },
     async fetchLabel() {
+      this.label_show_loading = true;
       this.labels = []; //clear the existing labels array
       // Retreive Label title from firestore base on UID
       const snapshot = await labelsCollection
@@ -239,15 +320,21 @@ export default {
         .orderBy("date", "desc")
         .get();
       snapshot.forEach(this.addLabel);
+      this.label_show_loading = false;
+
+      this.fetchNotes();
     },
     async fetchNotes() {
+      this.notes_show_loading = true;
+      this.emptyNotes = false;
+
       try {
+        this.notes = []; //clear the existing notes array
+
         const notesSnapshot = await notesCollection
           .where("lid", "==", this.labelID)
           .orderBy("date", "desc")
           .get();
-
-        this.notes = []; //clear the existing notes array
 
         notesSnapshot.forEach((doc) => {
           const noteData = doc.data();
@@ -256,14 +343,19 @@ export default {
             docID: doc.id,
           };
           this.notes.push(note);
+          this.notes_show_loading = false;
         });
 
-        console.log(this.notes);
+        // Perform dynamic search
+        this.notes_show_loading = false;
+        // this.performSearch();
       } catch (error) {
         console.error(error);
       }
+      this.notesAvailability();
     },
     displayNote(docId, title) {
+      this.notes = []; //clear the existing notes array
       this.labelTitle = title;
       this.labelID = docId;
       this.fetchNotes();
@@ -283,6 +375,30 @@ export default {
       this.mobile = window.innerWidth > 600 ? false : true;
       this.labelList = window.innerWidth > 600 ? true : false;
     },
+    notesAvailability() {
+      if (this.notes.length === 0) {
+        this.emptyNotes = true;
+      } else {
+        this.emptyNotes = false;
+      }
+      this.notes_show_loading = false;
+    },
+    async logout() {
+      try {
+        // Add the code to sign out the user from the authentication provider
+        await auth.signOut();
+
+        // Perform any additional cleanup or actions required after logout
+
+        // Redirect the user to the login page or any other desired page
+        router.push("/");
+
+        console.log("logout");
+      } catch (error) {
+        console.error(error);
+        // Handle any error that occurs during logout
+      }
+    },
   },
 };
 </script>
@@ -296,6 +412,10 @@ export default {
   @apply w-[85%] mx-auto;
 }
 
+.side__container {
+  @apply bg-shades-white !important;
+}
+
 /**********************************************
 **** Header Properties
 **********************************************/
@@ -305,7 +425,7 @@ export default {
 }
 
 .header__container {
-  @apply my-[1.5rem];
+  @apply my-[1.5rem] bg-shades-white;
 }
 
 .cta__wrapper {
@@ -321,11 +441,15 @@ export default {
 **********************************************/
 
 .labels__container {
-  /* @apply ; */
+  @apply sticky top-0;
+}
+
+.labelLoading {
+  @apply mt-[5rem];
 }
 
 .labels__wrapper {
-  @apply border-y-[.5px] border-neutral-300;
+  @apply bg-neutral-100 border-y-[.5px] border-neutral-300;
 }
 
 .label-text__wrapper {
@@ -340,6 +464,10 @@ export default {
   rotate: 180deg;
 }
 
+.label-lists__wrapper {
+  /* @apply bg-neutral-100; */
+}
+
 .label-list {
   @apply text-base text-neutral-600 font-semibold py-[.938rem] border-b-[.5px] border-neutral-300 cursor-pointer;
 }
@@ -347,9 +475,12 @@ export default {
 /**********************************************
 **** Main Header Properties
 **********************************************/
+.main__container {
+  @apply pb-[5rem];
+}
 
 .main-header__container {
-  @apply py-[2rem] border-b-[.5px] border-neutral-300;
+  @apply py-[2rem] bg-shades-white border-b-[.5px] border-neutral-300 sticky top-0 z-30;
 }
 
 .title-note__wrapper {
@@ -369,7 +500,7 @@ export default {
 }
 
 .search-input__wrapper {
-  @apply flex items-center bg-neutral-100 p-[.625rem] rounded;
+  @apply flex items-center w-full bg-neutral-100 p-[.625rem] rounded;
 }
 
 .search-input__wrapper input {
@@ -377,7 +508,11 @@ export default {
 }
 
 .btn__wrapper {
-  @apply flex flex-col gap-2;
+  @apply flex flex-col gap-2 w-full;
+}
+
+.cta-icon__wrapper > span {
+  @apply cursor-pointer;
 }
 
 /**********************************************
@@ -392,12 +527,40 @@ export default {
   @apply flex flex-col gap-6 items-center w-full;
 }
 
+.emptyNote {
+  @apply max-w-[62.5rem] ml-[2rem] h-fit;
+}
+
+.emptyLabel__container {
+  @apply w-[90%] h-screen mx-auto;
+}
+
+.emptyLabel {
+  @apply w-full mx-auto;
+}
+
+.notesLoader {
+  @apply mt-[4rem];
+}
+
 /**********************************************
 **** Footer Properties
 **********************************************/
 
 .footer__wrapper {
-  @apply text-center text-xs text-neutral-500 py-[1rem] w-full mt-auto;
+  @apply text-center bg-shades-white text-xs text-neutral-500 py-[1rem] w-full mt-auto;
+}
+
+.logout__wrapper {
+  @apply flex items-center justify-center gap-2 mb-[.5rem];
+}
+
+.logout__wrapper > span {
+  @apply text-neutral-600;
+}
+
+.logoutBtn {
+  @apply text-[.8rem] text-neutral-600 font-medium;
 }
 
 /***********************************************************
@@ -409,11 +572,10 @@ export default {
 
 @media (min-width: 600px) {
   .mainApp__container {
-    /* display: grid;
-    grid-template-columns: 1fr 1.5fr; */
+    @apply relative;
     display: flex;
-    height: 100vh;
-    /* @apply justify-items-stretch; */
+    min-height: 100vh;
+    max-height: fit-content;
   }
 
   /**********************************************
@@ -421,7 +583,13 @@ export default {
 **********************************************/
 
   .main__container {
-    @apply w-full;
+    @apply flex flex-col w-full overflow-y-auto;
+    height: fit-content;
+    max-height: 100vh;
+  }
+
+  .emptyLabel__container {
+    @apply max-w-[62.5rem];
   }
 
   .main-header__wrapper {
@@ -432,13 +600,10 @@ export default {
 **** Note Per List Properties
 **********************************************/
   .main-noteList__container {
-    @apply items-start max-w-[62.5rem] ml-[2rem] h-fit;
+    @apply items-start max-w-[62.5rem] ml-[2rem];
   }
 
   .main-noteList__container > ul {
-    /* display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(18.5rem, 1fr));
-    justify-content: flex-start; */
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
@@ -451,11 +616,34 @@ export default {
 **********************************************/
 
   .side__container {
-    @apply relative border-r-[.5px] border-neutral-300 w-full max-w-[23rem];
+    @apply relative border-r-[.5px] border-neutral-300 w-full min-h-screen max-h-fit max-w-[23rem] bg-gray-100;
+    /* display: grid; */
+    /* grid-template-rows: minmax(auto, 16rem) minmax(auto, 0.8fr); */
+    /* grid-template-rows: minmax(10rem, 15rem) minmax(0.8fr, 69vh); */
+    /* grid-template-rows: minmax(auto, 16rem) minmax(auto, 4fr) minmax(0.1fr); */
+  }
+
+  .header__container {
+    @apply h-full max-h-[11rem];
+  }
+
+  .labels__container {
+    @apply overflow-y-auto;
+    height: 55vh;
+  }
+
+  .label-lists__wrapper {
+    max-height: 100%;
   }
 
   .footer__wrapper {
     @apply absolute left-0 bottom-0;
+  }
+}
+
+@media (min-width: 840px) {
+  .btn__wrapper {
+    @apply max-w-[12rem] self-end;
   }
 }
 
@@ -481,10 +669,6 @@ export default {
 **********************************************/
   .action-note__wrapper {
     @apply flex-row justify-stretch;
-  }
-
-  .search-input__wrapper {
-    @apply w-full max-w-[32rem];
   }
 
   .btn__wrapper {

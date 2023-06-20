@@ -77,6 +77,7 @@ export default {
     return {
       noteOption: false,
       colorActive: this.color,
+      previousColor: this.color,
       titleContent: this.title,
       previousTitle: this.title,
       content: this.noteContent,
@@ -134,7 +135,8 @@ export default {
       // Check if the value is the same as previous data
       if (
         this.previousTitle === this.titleContent &&
-        this.content === editableText.innerHTML
+        this.content === editableText.innerHTML &&
+        this.previousColor === this.colorActive
       ) {
         this.closeAll();
         return;
@@ -176,7 +178,7 @@ export default {
         // UPDATE DATA TO THE FIRESTORE
         await notesCollection.doc(docID).update(notesContent);
 
-        this.$emit("child");
+        this.$emit("display-note");
 
         this.closeAll();
       }
@@ -184,7 +186,7 @@ export default {
     async deleteNote() {
       const docID = this.noteID;
       await notesCollection.doc(docID).delete();
-      this.$emit("child");
+      this.$emit("display-note");
       this.closeAll();
     },
   },

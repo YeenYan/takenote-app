@@ -35,7 +35,7 @@ export default {
 
 <style lang="postcss" scoped>
 .noteList__wrapper {
-  @apply bg-shades-white drop-shadow-lg w-full max-w-[18rem] pt-[2.5rem] px-[.938rem] pb-[2rem] rounded-lg overflow-hidden cursor-pointer h-[10rem];
+  @apply bg-shades-white drop-shadow-lg w-full max-w-[20rem] pt-[2.5rem] px-[.938rem] pb-[2rem] rounded-lg overflow-hidden cursor-pointer h-[10rem];
 }
 
 .top-color {
@@ -80,5 +80,11 @@ export default {
 
 .noteList-content__wrapper {
   @apply text-sm text-neutral-600 h-[50%] max-h-[4rem] overflow-y-hidden;
+}
+
+@media (min-width: 600px) {
+  .noteList__wrapper {
+    @apply max-w-[16rem];
+  }
 }
 </style>
