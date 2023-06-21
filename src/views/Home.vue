@@ -21,18 +21,22 @@
       >
         menu
       </span>
-      <div class="blanket" v-if="mobileNav"></div>
-      <transition name="mobileNav">
-        <div class="mobileNav" v-if="mobileNav">
-          <span class="material-symbols-outlined close-icon" @click="toggleMobileNav">
-            close
-          </span>
-          <ul>
-            <router-link :to="{ name: 'Login' }">Log In</router-link>
-            <router-link :to="{ name: 'Register' }">Sign Up</router-link>
-          </ul>
-        </div>
-      </transition>
+
+      <!-- Mobile Screen -->
+      <div
+        class="blanket"
+        :class="{ active: mobileNav, '': !mobileNav }"
+        v-if="mobile"
+      ></div>
+      <div class="mobileNav" :class="{ active: mobileNav, '': !mobileNav }" v-if="mobile">
+        <span class="material-symbols-outlined close-icon" @click="toggleMobileNav">
+          close
+        </span>
+        <ul>
+          <router-link :to="{ name: 'Login' }">Log In</router-link>
+          <router-link :to="{ name: 'Register' }">Sign Up</router-link>
+        </ul>
+      </div>
     </nav>
   </header>
 
@@ -188,15 +192,25 @@ export default {
          Mobile Properties 
 ================================= */
 .menu-icon {
-  @apply text-3xl text-neutral-700;
+  @apply text-3xl text-neutral-700 z-20;
 }
 
 .mobileNav {
-  @apply fixed top-0 right-0 bg-purple-500 w-4/5 h-full;
+  @apply fixed top-0 right-[-600px] bg-purple-500 w-4/5 h-full z-40;
+  transition: all 0.4s ease-in-out;
+}
+
+.mobileNav.active {
+  @apply right-0;
 }
 
 .blanket {
-  @apply absolute top-0 left-0 bg-neutral-900 opacity-70 w-screen h-screen;
+  @apply absolute top-0 left-0 bg-neutral-900 opacity-0 w-screen h-screen;
+  transition: all 0.2s ease-in-out;
+}
+
+.blanket.active {
+  @apply opacity-70;
 }
 
 .mobileNav .close-icon {
@@ -209,27 +223,6 @@ export default {
 
 .mobileNav ul a {
   @apply p-5 text-shades-white border-purple-300 border-b-[1px] border-opacity-50;
-}
-
-.mobileNav-enter-active,
-.mobileNav-leave-active {
-  transition: all 500ms ease-in-out;
-}
-
-.mobileNav-enter {
-  transform: translateX(250px);
-}
-
-.mobileNav-leave {
-  transform: translateX(0);
-}
-
-.mobileNav-enter-to {
-  transform: translateX(0);
-}
-
-.mobileNav-leave-to {
-  transform: translateX(250px);
 }
 
 /* ============================================

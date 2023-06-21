@@ -17,7 +17,7 @@
       <div class="inputs">
         <!-- email -->
         <div class="input">
-          <vee-field name="email" type="email" placeholder="Email" />
+          <vee-field name="email" type="email" placeholder="Email" class="email" />
         </div>
         <ErrorMessage class="error-text" name="email" />
         <!-- password -->
@@ -30,9 +30,9 @@
         >
       </div>
 
-      <router-link class="forgotPassword" :to="{ name: 'ForgotPassword' }"
+      <!-- <router-link class="forgotPassword" :to="{ name: 'ForgotPassword' }"
         >Forgot Password</router-link
-      >
+      > -->
 
       <div class="signin-signup__wrapper">
         <p>Don't have an account?</p>
