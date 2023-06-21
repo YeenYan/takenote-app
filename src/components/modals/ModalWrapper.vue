@@ -25,7 +25,7 @@ export default {
 
 <style lang="postcss" scoped>
 .modalWrapper__container {
-  @apply flex justify-center fixed z-10 inset-0 overflow-y-auto;
+  @apply flex justify-center fixed z-10 inset-0 overflow-y-auto z-50;
 }
 
 @media (max-width: 450px) {
