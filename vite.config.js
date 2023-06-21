@@ -11,7 +11,7 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url))
     }
   },
-  base: '/takenote-app',
+  base: '/takenote-app/',
   // base: '/localhost:5173/takenote-app',
   server: {
     port: 5173, // Set the desired port number
