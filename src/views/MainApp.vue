@@ -9,9 +9,9 @@
         <!-- CTA -->
         <div class="cta__wrapper">
           <base-button class="purple" @click.prevent="showInputLabelModal"
-            >New Note</base-button
+            >New Folder</base-button
           >
-          <p>Total Notes: {{ labels.length }}</p>
+          <p>Folder Count: {{ labels.length }}</p>
         </div>
       </header>
 
@@ -19,7 +19,7 @@
       <nav class="labels__container">
         <div class="labels__wrapper">
           <div class="label-text__wrapper mobile-margin" @click.prevent="toggleLabelList">
-            <p>LABELS</p>
+            <p>FOLDERS</p>
             <span
               class="material-symbols-outlined"
               :class="labelList ? 'active' : ''"
@@ -54,7 +54,7 @@
           <button @click.prevent="logout" class="logoutBtn">Logout</button>
         </div>
         <p>Copyright: © {{ getCurrentYear }}</p>
-        <p>Design & Built by Mark Ian Reyes</p>
+        <p>Designed & Built by Mark Ian Reyes</p>
       </footer>
     </div>
 
@@ -71,9 +71,13 @@
               >
                 edit
               </span>
-              <span class="material-symbols-outlined" @click.prevent="deleteLabel">
+              <span
+                class="material-symbols-outlined"
+                @click.prevent="showConfirmDeleteFolder"
+              >
                 delete
               </span>
+              <!-- deleteLabel -->
             </div>
           </div>
 
@@ -122,7 +126,7 @@
         <button @click.prevent="logout" class="logoutBtn">Logout</button>
       </div>
       <p>Copyright: © {{ getCurrentYear }}</p>
-      <p>Design & Built by Mark Ian Reyes</p>
+      <p>Designed & Built by Mark Ian Reyes</p>
     </footer>
   </div>
 
@@ -148,6 +152,7 @@
       :noteContent="updateContent"
       @display-note="fetchNotes"
     />
+    <ConfirmDeleteFolder v-if="confirmDeleteFolder" @delete-folder="deleteLabel" />
   </teleport>
 </template>
 
@@ -162,6 +167,7 @@ import InputLabelModal from "../components/modals/InputLabel.vue";
 import UpdateLabelModal from "../components/modals/UpdateLabel.vue";
 import InputNoteModal from "../components/modals/InputNote.vue";
 import UpdateNoteModal from "../components/modals/UpdateNote.vue";
+import ConfirmDeleteFolder from "../components/modals/ConfirmDeleteFolder.vue";
 import NoteItem from "../components/NoteItem.vue";
 
 import EmptyNoteUI from "../components/emptyNotesUI.vue";
@@ -182,6 +188,7 @@ export default {
     EmptyLabel,
     LabelLoading,
     NotesLoading,
+    ConfirmDeleteFolder,
   },
   data() {
     return {
@@ -213,6 +220,7 @@ export default {
       "updateNoteTitle",
       "updateDate",
       "updateContent",
+      "confirmDeleteFolder",
     ]),
     getCurrentYear() {
       return (this.year = new Date().getFullYear());
@@ -280,6 +288,7 @@ export default {
       "showUpdateLabelModal",
       "showInputNoteModal",
       "showUpdateNoteModal",
+      "showConfirmDeleteFolder",
     ]),
     addLabel(document) {
       const label = {

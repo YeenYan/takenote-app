@@ -2,14 +2,14 @@
   <modal-wrapper>
     <vee-form :validation-schema="schema" @submit="upload">
       <div class="inputLabel__container">
-        <p>Update Label Title</p>
+        <p>Update Folder Name</p>
 
         <div class="input">
           <vee-field
             ref="labelInput"
             name="labelTitle"
             type="text"
-            placeholder="Enter Label Title"
+            placeholder="Enter folder name"
             v-model="labelTitle"
           />
         </div>
