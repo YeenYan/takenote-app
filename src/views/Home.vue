@@ -101,7 +101,7 @@
 
   <footer class="footer__container">
     <p>Copyright: © {{ getCurrentYear }}</p>
-    <p>Design & Built by Mark Ian Reyes</p>
+    <p>Designed & Built by Mark Ian Reyes</p>
   </footer>
 </template>
 
@@ -205,12 +205,12 @@ export default {
 }
 
 .blanket {
-  @apply absolute top-0 left-0 bg-neutral-900 opacity-0 w-screen h-screen;
+  @apply absolute top-0 left-0 bg-neutral-900 opacity-0 w-screen h-screen invisible;
   transition: all 0.2s ease-in-out;
 }
 
 .blanket.active {
-  @apply opacity-70;
+  @apply opacity-70 visible;
 }
 
 .mobileNav .close-icon {

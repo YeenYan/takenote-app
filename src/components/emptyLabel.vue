@@ -5,7 +5,7 @@
     </div>
     <h2>Add your first note</h2>
     <p>Relax and note something beautiful</p>
-    <base-button class="yellow btnAdd" @click.prevent="addLabel">Add Label</base-button>
+    <base-button class="yellow btnAdd" @click.prevent="addLabel">Add Folder</base-button>
   </div>
 </template>
 

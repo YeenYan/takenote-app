@@ -2,14 +2,15 @@
   <modal-wrapper>
     <vee-form :validation-schema="schema" @submit="upload">
       <div class="inputLabel__container">
-        <p>Input Label Title</p>
+        <p>Input Folder Name</p>
 
+        <ErrorMessage class="error-text" name="foldername" />
         <div class="input">
           <vee-field
             ref="labelInput"
-            name="labelTitle"
+            name="foldername"
             type="text"
-            placeholder="Enter Label Title"
+            placeholder="Enter folder name"
             v-model="labelTitle"
           />
         </div>
@@ -39,7 +40,7 @@ export default {
   data() {
     return {
       schema: {
-        labelTitle: "required|alpha_spaces",
+        foldername: "required|alpha_spaces",
       },
 
       labelTitle: "",
@@ -66,7 +67,7 @@ export default {
 
       const label = {
         uid: auth.currentUser.uid,
-        labelTitle: values.labelTitle,
+        labelTitle: values.foldername,
         date: formattedDate,
       };
 
@@ -84,8 +85,6 @@ export default {
       this.closeAll();
 
       this.$emit("display-label");
-
-      // window.location.reload();
     },
   },
 };

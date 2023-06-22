@@ -29,7 +29,11 @@
         <!-- Password -->
         <div class="input">
           <vee-field name="password" :bails="false" v-slot="{ field, errors }">
-            <input type="password" placeholder="Password" v-bind="field" />
+            <input
+              type="password"
+              placeholder="Enter a password (9 characters or more)"
+              v-bind="field"
+            />
             <div class="error-text" v-for="error in errors" :key="error">
               {{ error }}
             </div>

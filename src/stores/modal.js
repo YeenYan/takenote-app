@@ -17,7 +17,9 @@ export default defineStore("modal", {
     updateColor: 'yellow',
     updateNoteTitle: '',
     updateDate: '',
-    updateContent: ''
+    updateContent: '',
+
+    confirmDeleteFolder: false,
 
   }),
   getters: {
@@ -33,6 +35,7 @@ export default defineStore("modal", {
       this.updateLabelModal = false;
       this.inputNoteModal = false;
       this.updateNoteModal = false;
+      this.confirmDeleteFolder = false;
     },
     showInputLabelModal() {
       this.isOpen = true;
@@ -60,6 +63,11 @@ export default defineStore("modal", {
       this.updateNoteTitle = noteTitle;
       this.updateDate = date;
       this.updateContent = content;
+    },
+    showConfirmDeleteFolder() {
+      this.isOpen = true;
+      this.modalAnimation = true;
+      this.confirmDeleteFolder = true;
     }
   }
 });
