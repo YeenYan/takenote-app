@@ -2,16 +2,33 @@ import { fileURLToPath, URL } from 'node:url';
 
 import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
+import { resolve } from "path";
 
 // https://vitejs.dev/config/
 export default defineConfig({
   base: '/',
   plugins: [vue()],
   resolve: {
+    // alias: {
+    //   '@': fileURLToPath(new URL('./src', import.meta.url))
+    // }
     alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url))
+      '@': resolve(__dirname, './src')
     }
   },
+  devServer: {
+    proxy: {
+      // Configure the proxy for your API server
+      '/api': {
+        target: 'https://firestore.googleapis.com',
+        changeOrigin: true,
+        secure: false,
+        pathRewrite: {
+          '^/api': ''
+        }
+      }
+    }
+  }
   // build: {
   //   chunkSizeWarningLimit: 1500,
   //   rollupOptions: {
