@@ -1,6 +1,9 @@
 import { createApp } from 'vue';
 import { createPinia } from 'pinia';
 
+// const express = require('express');
+// const history = require('connect-history-api-fallback');
+
 import App from './App.vue';
 import router from './router';
 import VeeValidatePlugin from './includes/validations';
@@ -25,6 +28,12 @@ auth.onAuthStateChanged(() => {
     app.use(router);
     app.use(VeeValidatePlugin);
 
+    // Use the history API fallback middleware
+    // app.use(history());
+
+    // Serve static files from the dist directory (or your build directory)
+    // app.use(express.static('dist'));
+
 
     app.component('base-button', BaseButton);
     app.component('base-card', BaseCard);
@@ -38,15 +47,17 @@ auth.onAuthStateChanged(() => {
 router.beforeEach((to, from, next) => {
   document.title = `TakeNote | ${to.meta.title}`;
 
-  // if (to.path === '/login' && auth.currentUser) {
-  //   next('/');
-  //   return;
-  // }
-
-  // if (to.matched.some(record => record.meta.requiresAuth) && !auth.currentUser) {
-  //   next('/login');
-  //   return;
-  // }
 
   next();
 });
+
+
+// if (to.path === '/login' && auth.currentUser) {
+//   next('/');
+//   return;
+// }
+
+// if (to.matched.some(record => record.meta.requiresAuth) && !auth.currentUser) {
+//   next('/login');
+//   return;
+// }

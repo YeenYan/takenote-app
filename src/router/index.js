@@ -10,7 +10,8 @@ import MainApp from '../views/MainApp.vue';
 import useUserStore from '../stores/user';
 
 const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
+  // import.meta.env.BASE_URL
+  history: createWebHistory(),
   routes: [
     {
       path: '/',
