@@ -9,7 +9,7 @@
       <div class="nav-links">
         <ul v-show="!mobile">
           <router-link :to="{ name: 'Login' }" class="nav-link login">Log In</router-link>
-          <router-link :to="{ name: 'Register' }" class="nav-link signup"
+          <router-link :to="{ name: 'register' }" class="nav-link signup"
             >Sign Up</router-link
           >
         </ul>
@@ -45,7 +45,7 @@
       <div class="hero-sec__content-wrapper">
         <h2>Simplify Your Note-Taking</h2>
         <p>Stay Focused and Keep Your Thoughts in Order with TakeNote</p>
-        <router-link :to="{ name: 'Register' }" class="cta hero-sec__cta"
+        <router-link :to="{ name: 'register' }" class="cta hero-sec__cta"
           >Sign up now</router-link
         >
       </div>
@@ -92,7 +92,7 @@
     <section class="cta-section__container">
       <div>
         <h3>Looking for a note-taking tool?</h3>
-        <router-link :to="{ name: 'Register' }" class="cta"
+        <router-link :to="{ name: 'register' }" class="cta"
           >Try it for yourself</router-link
         >
       </div>
