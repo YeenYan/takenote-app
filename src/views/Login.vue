@@ -36,7 +36,7 @@
 
       <div class="signin-signup__wrapper">
         <p>Don't have an account?</p>
-        <router-link :to="{ name: 'Register' }">Sign up</router-link>
+        <router-link :to="{ name: 'register' }">Sign up</router-link>
       </div>
     </vee-form>
   </div>
